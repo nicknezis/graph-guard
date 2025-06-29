@@ -45,7 +45,7 @@ class TestAuditCollector(private val auditEvents: ConcurrentLinkedQueue<String>)
     }
     
     private fun handleProxiedEvent(event: Server.Proxied) {
-        val sessionId = event.session.id.toString()
+        val sessionId = event.session.id
         val sourceAddr = event.source.address.toString()
         
         when (val message = event.received) {
@@ -97,7 +97,7 @@ class TestAuditCollector(private val auditEvents: ConcurrentLinkedQueue<String>)
     
     private fun handleFailureResponse(event: Server.Proxied, sessionId: String) {
         if (event.sent is Bolt.Failure) {
-            val failure = event.sent as Bolt.Failure
+            val failure = event.sent
             val errorCode = failure.metadata["code"] as? String ?: "UNKNOWN"
             auditEvents.add("FAILURE:$sessionId:$errorCode")
             auditEvents.add("METADATA:$sessionId:${failure.metadata}")
@@ -325,7 +325,7 @@ class AuditPluginTest : StringSpec({
         val plugin = TestAuditCollector(auditEvents)
         
         val session = createTestSession()
-        val sessionId = session.id.toString()
+        val sessionId = session.id
         
         // Authentication
         val helloEvent = Server.Proxied(

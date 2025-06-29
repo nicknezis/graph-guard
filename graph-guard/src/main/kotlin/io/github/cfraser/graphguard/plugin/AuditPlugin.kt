@@ -88,7 +88,7 @@ class AuditPlugin(
     private suspend fun auditProxiedMessage(event: Server.Proxied) {
         val sessionInfo = activeSessions.computeIfAbsent(event.session) {
             SessionInfo(
-                sessionId = event.session.id.toString(),
+                sessionId = event.session.id,
                 createdAt = Instant.now(),
                 sourceAddress = AddressExtractor.getSourceAddress(event)
             )
@@ -126,7 +126,7 @@ class AuditPlugin(
             sessionInfo.userId = userId
             
             val auditEventBuilder = AuditEventBuilder("AUTHENTICATION_ATTEMPT")
-                .sessionId(event.session.id.toString())
+                .sessionId(event.session.id)
                 .sourceAddress(AddressExtractor.getSourceAddress(event))
                 .destinationAddress(AddressExtractor.getDestinationAddress(event))
                 .userId(userId)
@@ -142,7 +142,7 @@ class AuditPlugin(
                         sessionInfo.authenticatedAt = Instant.now()
                     } else if (event.sent is Bolt.Failure) {
                         put("auth_result", "FAILURE") 
-                        put("failure_reason", (event.sent as Bolt.Failure).metadata["message"])
+                        put("failure_reason", event.sent.metadata["message"])
                     }
                 })
             
@@ -164,7 +164,7 @@ class AuditPlugin(
             val startTime = Instant.now()
             
             val auditEventBuilder = AuditEventBuilder("QUERY_EXECUTION")
-                .sessionId(event.session.id.toString())
+                .sessionId(event.session.id)
                 .sourceAddress(AddressExtractor.getSourceAddress(event))
                 .destinationAddress(AddressExtractor.getDestinationAddress(event))
                 .userId(sessionInfo.userId)
@@ -220,7 +220,7 @@ class AuditPlugin(
         
         auditLock.withLock {
             val auditEventBuilder = AuditEventBuilder("RESULT_FETCH")
-                .sessionId(event.session.id.toString())
+                .sessionId(event.session.id)
                 .sourceAddress(AddressExtractor.getSourceAddress(event))
                 .destinationAddress(AddressExtractor.getDestinationAddress(event))
                 .userId(sessionInfo.userId)
@@ -268,7 +268,7 @@ class AuditPlugin(
             }
             
             val auditEventBuilder = AuditEventBuilder(eventType)
-                .sessionId(event.session.id.toString())
+                .sessionId(event.session.id)
                 .sourceAddress(AddressExtractor.getSourceAddress(event))
                 .destinationAddress(AddressExtractor.getDestinationAddress(event))
                 .userId(sessionInfo.userId)
@@ -312,7 +312,7 @@ class AuditPlugin(
                 val sessionDuration = java.time.Duration.between(sessionInfo.createdAt, Instant.now())
                 
                 val sessionSummaryEvent = AuditEventBuilder("SESSION_SUMMARY")
-                    .sessionId(event.session.id.toString())
+                    .sessionId(event.session.id)
                     .sourceAddress(AddressExtractor.getSourceAddress(event))
                     .userId(sessionInfo.userId)
                     .timestamp(Instant.now())
@@ -331,7 +331,7 @@ class AuditPlugin(
             }
             
             val eventBuilder = AuditEventBuilder(eventType)
-                .sessionId(event.session.id.toString())
+                .sessionId(event.session.id)
                 .sourceAddress(AddressExtractor.getSourceAddress(event))
                 .destinationAddress(AddressExtractor.getDestinationAddress(event))
                 .userId(sessionInfo.userId)
